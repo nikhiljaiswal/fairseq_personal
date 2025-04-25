@@ -206,12 +206,16 @@ def get_files(path, relative_to="fairseq"):
 try:
     # symlink examples into fairseq package so package_data accepts them
     fairseq_examples = os.path.join("fairseq", "examples")
-    if "build_ext" not in sys.argv[1:] and not os.path.exists(fairseq_examples):
+    if "build_ext" not in sys.argv[1:]:
+        if os.path.islink(fairseq_examples) or os.path.isdir(fairseq_examples):
+            os.unlink(fairseq_examples) if os.path.islink(fairseq_examples) else shutil.rmtree(fairseq_examples)
         os.symlink(os.path.join("..", "examples"), fairseq_examples)
+    
     package_data = {
         "fairseq": get_files("fairseq/config") + get_files("fairseq/examples"),
     }
     do_setup(package_data)
+
 finally:
-    if "build_ext" not in sys.argv[1:] and os.path.exists(fairseq_examples):
+    if "build_ext" not in sys.argv[1:] and os.path.islink(fairseq_examples):
         os.unlink(fairseq_examples)
