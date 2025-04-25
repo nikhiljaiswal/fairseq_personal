@@ -75,13 +75,6 @@ def from_pretrained(
         arg_overrides=kwargs,
     )
 
-
-    print('\n\n >> INSIDE HUB UTILS: ')
-    print("args", args)
-    print("task", task)
-    print("models", models)
-
-    
     return {
         "args": args,
         "task": task,
@@ -102,10 +95,6 @@ class GeneratorHubInterface(nn.Module):
         self.models = nn.ModuleList(models)
         self.src_dict = task.source_dictionary
         self.tgt_dict = task.target_dictionary
-
-
-        print('\n\n\n >>>>>>>> INSIDE GeneratorHubInterface')
-        print('self.cfg :' ,self.cfg )
 
         # optimize model for generation
         for model in self.models:
@@ -132,10 +121,6 @@ class GeneratorHubInterface(nn.Module):
     def translate(
         self, sentences: List[str], beam: int = 5, verbose: bool = False, **kwargs
     ) -> List[str]:
-
-        print('\n\n >>>>>> INSIDE TRANSLATE OF HUB UTILS')
-        print('\nsentences: ',sentences)
-        print('\nkwargs: ',kwargs)
         return self.sample(sentences, beam, verbose, **kwargs)
 
     def sample(
@@ -144,7 +129,6 @@ class GeneratorHubInterface(nn.Module):
         if isinstance(sentences, str):
             return self.sample([sentences], beam=beam, verbose=verbose, **kwargs)[0]
         tokenized_sentences = [self.encode(sentence) for sentence in sentences]
-        print('\n\ntokenized_sentences: ',tokenized_sentences)
         batched_hypos = self.generate(tokenized_sentences, beam, verbose, **kwargs)
         return [self.decode(hypos[0]["tokens"]) for hypos in batched_hypos]
 
@@ -258,12 +242,8 @@ class GeneratorHubInterface(nn.Module):
         return self.detokenize(sentence)
 
     def tokenize(self, sentence: str) -> str:
-        print('\n\n >> INSIDE TOKENIZE')
-        print('\nself.tokenizer: ',self.tokenizer)
-        print('sentence: ',sentence)
         if self.tokenizer is not None:
             sentence = self.tokenizer.encode(sentence)
-        print('sentence: ',sentence)
         return sentence
 
     def detokenize(self, sentence: str) -> str:
@@ -272,12 +252,8 @@ class GeneratorHubInterface(nn.Module):
         return sentence
 
     def apply_bpe(self, sentence: str) -> str:
-        print('\n\nInside APPLY BPE')
-        print('\nself.bpe: ',self.bpe)
-        print('sentence: ',sentence)
         if self.bpe is not None:
             sentence = self.bpe.encode(sentence)
-        print('sentence: ',sentence)
         return sentence
 
     def remove_bpe(self, sentence: str) -> str:

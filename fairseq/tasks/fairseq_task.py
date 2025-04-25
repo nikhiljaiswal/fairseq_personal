@@ -601,8 +601,6 @@ class FairseqTask(object):
         return {}
 
     def load_state_dict(self, state_dict: Dict[str, Any]):
-        from pprint import pprint
-        pprint(self.__dict__)
         if self.state is not None:
             self.state.merge_state_dict(state_dict)
 

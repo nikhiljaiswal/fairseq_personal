@@ -314,28 +314,13 @@ def load_checkpoint_to_cpu(path, arg_overrides=None, load_on_all_ranks=False):
     with open(local_path, "rb") as f:
         state = torch.load(f, map_location=torch.device("cpu"), weights_only=False)
 
-    print('\n\nlocal_path: ', local_path)
-    #logger.info('state keys: ', state.keys())
-    print('\n\n state: ',state.keys())
-    print('state[cfg]: ',state['cfg'])
-
-
     args = state.get("args", None)
-    print("args is:", args)
-    print("arg_overrides is:", arg_overrides)
 
     if "args" in state and state["args"] is not None and arg_overrides is not None:
         args = state["args"]
-
-        logger.info('args: ', args)
-        logger.info('arg_overrides: ', arg_overrides)
         for arg_name, arg_val in arg_overrides.items():
-            print('arg_name: ',arg_name)
-            print('arg_val: ',arg_val)
             setattr(args, arg_name, arg_val)
 
-
-    print('\nargs: ',args)
     if "cfg" in state and state["cfg"] is not None:
 
         # hack to be able to set Namespace in dict config. this should be removed when we update to newer
@@ -344,7 +329,6 @@ def load_checkpoint_to_cpu(path, arg_overrides=None, load_on_all_ranks=False):
         from omegaconf import _utils
 
         if oc_version < "2.2":
-            print('inside 1')
             old_primitive = _utils.is_primitive_type
             _utils.is_primitive_type = lambda _: True
 
@@ -353,24 +337,12 @@ def load_checkpoint_to_cpu(path, arg_overrides=None, load_on_all_ranks=False):
             _utils.is_primitive_type = old_primitive
             OmegaConf.set_struct(state["cfg"], True)
         else:
-            print('inside 2')
             state["cfg"] = OmegaConf.create(state["cfg"], flags={"allow_objects": True})
 
         if arg_overrides is not None:
-            print('inside overwrite')
             overwrite_args_by_name(state["cfg"], arg_overrides)
 
-    print('\nnow args: ',args)
-    print('\n\n BEFORE CALLING UPGRADE')
-    print('state[cfg]: ',state['cfg'])
     state = _upgrade_state_dict(state)
-
-    args = state.get("args", None)
-    print("args is:", args)
-    print('state: ', state.keys())
-    print("state['args']: ", state['args'])
-    print("state['cfg']: ", state['cfg'])
-    
     return state
 
 
@@ -465,20 +437,8 @@ def load_model_ensemble_and_task(
             if task is None:
                 task = tasks.setup_task(cfg.task)
 
-
-            print('\n\n >> INSIDE CHECKPOINT UTILS')
-            print('\n\n state["task_state"]',state["task_state"])
-            print('\n\n state', state.keys())
-            print('\n\n task', task)
-            print('\n\n cfg',cfg)
-
-
             if "task_state" in state:
-                print('called task.load_state_dict')
                 task.load_state_dict(state["task_state"])
-                from pprint import pprint
-                #pprint(task.__dict__)
-                print('done task.load_state_dict')
 
             if "fsdp_metadata" in state and num_shards > 1:
                 model_shard_state["shard_weights"].append(state["model"])
@@ -535,7 +495,6 @@ def load_model_ensemble_and_task(
 
         # build model for ensemble
         ensemble.append(model)
-    print('final cfg: ',cfg)
     return ensemble, cfg, task
 
 
@@ -622,9 +581,6 @@ def _torch_persistent_save(obj, f):
 def _upgrade_state_dict(state):
     """Helper for upgrading old model checkpoints."""
 
-    print('\n\n INSIDE _upgrade_state_dict')
-    print('state: ',state['cfg'])
-
     # add optimizer_history
     if "optimizer_history" not in state:
         state["optimizer_history"] = [
@@ -676,10 +632,6 @@ def _upgrade_state_dict(state):
             state["args"].max_source_positions = state["args"].max_positions
             state["args"].max_target_positions = state["args"].max_positions
         
-        
-        print('\n\n inside _upgrade_state_dict >> state["args"]',state["args"])
-
-
         # default to translation task
         if not hasattr(state["args"], "task"):
             state["args"].task = "translation"
@@ -760,7 +712,6 @@ def _upgrade_state_dict(state):
             ):
                 cfg.model.w2v_args.task.eval_wer_config.print_alignment = "hard"
 
-    print('final state: ',state)
     return state
 
 

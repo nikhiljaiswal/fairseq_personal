@@ -457,7 +457,6 @@ def overwrite_args_by_name(cfg: DictConfig, overrides: Dict[str, any]):
 
     with open_dict(cfg):
         for k in cfg.keys():
-            print('value of k: ',k)
             # "k in cfg" will return false if its a "mandatory value (e.g. ???)"
             if k in cfg and isinstance(cfg[k], DictConfig):
                 if k in overrides and isinstance(overrides[k], dict):
